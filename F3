@@ -1,0 +1,78 @@
+import Fastify from 'fastify';
+
+const fastify = Fastify({
+  logger: true // Ativa logs automáticos no terminal para monitorar requisições
+});
+
+// Mock de dados (Nosso banco de dados em memória)
+let teams = [
+  { id: 1, name: 'Ferrari', base: 'Maranello', powerUnit: 'Ferrari' },
+  { id: 2, name: 'McLaren', base: 'Woking', powerUnit: 'Mercedes' },
+  { id: 3, name: 'Red Bull Racing', base: 'Milton Keynes', powerUnit: 'Honda RBPT' }
+];
+
+let drivers = [
+  { id: 1, name: 'Charles Leclerc', teamId: 1, country: 'Monaco' },
+  { id: 2, name: 'Lando Norris', teamId: 2, country: 'United Kingdom' },
+  { id: 3, name: 'Max Verstappen', teamId: 3, country: 'Netherlands' }
+];
+
+// --- ROTAS DA API ---
+
+// Rota Raiz (Boas-vindas)
+fastify.get('/', async (request, reply) => {
+  return { message: 'Bem-vindo à Minimal API da Fórmula 1! 🏎️💨' };
+});
+
+// Listar todas as equipes
+fastify.get('/teams', async (request, reply) => {
+  return teams;
+});
+
+// Buscar equipe por ID
+fastify.get('/teams/:id', async (request, reply) => {
+  const { id } = request.params;
+  const team = teams.find(t => t.id === Number(id));
+
+  if (!team) {
+    return reply.status(404).send({ error: 'Equipe não encontrada' });
+  }
+  return team;
+});
+
+// Adicionar uma nova equipe
+fastify.post('/teams', async (request, reply) => {
+  const { name, base, powerUnit } = request.body;
+
+  if (!name) {
+    return reply.status(400).send({ error: 'O nome da equipe é obrigatório' });
+  }
+
+  const newTeam = {
+    id: teams.length + 1,
+    name,
+    base: base || 'Desconhecida',
+    powerUnit: powerUnit || 'Desconhecido'
+  };
+
+  teams.push(newTeam);
+  return reply.status(201).send(newTeam);
+});
+
+// Listar todos os pilotos
+fastify.get('/drivers', async (request, reply) => {
+  return drivers;
+});
+
+// --- INICIALIZAÇÃO DO SERVIDOR ---
+const start = async () => {
+  try {
+    await fastify.listen({ port: 3000 });
+    console.log('🏁 Servidor rodando na velocidade da luz em http://localhost:3000');
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
